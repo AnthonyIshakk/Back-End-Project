@@ -45,11 +45,12 @@ export async function createProductService({ title, price, description, image_ur
   return await createProduct({ title, price, description, image_url, merchantId });
 }
 
-export async function updateProductService({ id, title, price, description, image_url, merchantId }) {
-  const upd = await updateProduct({ id, title, price, description, image_url, merchantId });
+export async function updateProductService({ id, title, price, description, image_url, merchantId, overrideMerchantId }) {
+  const upd = await updateProduct({ id, title, price, description, image_url, merchantId, overrideMerchantId });
   if (!upd) throw new Error("Product not updated or found!");
   return upd;
 }
+
 
 export async function deleteProductService({ id, merchantId }) {
   const dlt = await deleteProduct({ id, merchantId });

@@ -12,9 +12,8 @@ export async function getProducts(req, res) {
   try {
     let merchantId = req.user.merchant_id || null;
 
-    //eza l user admin bas fi bel bel query merchantId mnetsa3mela kermel nshuf l products of the company
     if (!req.user.merchant_id && req.query.merchantId) {
-      merchantId = parseInt(req.query.merchantId, 10);
+      merchantId = parseInt(req.query.merchantId, 10); 
     }
 
     const data = await ProductsListService(req.query, merchantId);
@@ -48,9 +47,17 @@ export async function searchProducts(req, res) {
 
 export async function createProduct(req, res) {
   try {
-    const { title, price, description } = req.body;
+    const { title, price, description, merchantId: bodyMerchantId } = req.body;
     const image_url = req.file ? `/uploads/${req.file.filename}` : null;
-    const merchantId = req.user.merchant_id || null;
+
+    let merchantId;
+
+    if (req.user.merchant_id) {
+      merchantId = req.user.merchant_id;
+    } else {
+      merchantId = bodyMerchantId ? parseInt(bodyMerchantId, 10) : null;
+    }
+
     let product = await createProductService({
       title,
       price,
@@ -58,6 +65,7 @@ export async function createProduct(req, res) {
       image_url,
       merchantId,
     });
+
     product.image_url = buildImageUrl(req, product.image_url);
     res.status(201).json(product);
   } catch (err) {
@@ -68,17 +76,28 @@ export async function createProduct(req, res) {
 export async function updateProduct(req, res) {
   try {
     const id = parseInt(req.params.id, 10);
-    const { title, price, description } = req.body;
+    const { title, price, description, merchantId: bodyMerchantId } = req.body;
     const image_url = req.file ? `/uploads/${req.file.filename}` : null;
-    const merchantId = req.user.merchant_id || null;
-    let product = await updateProductService({
+
+    let merchantId;
+    let overrideMerchantId;
+
+    if (req.user.merchant_id) {
+      merchantId = req.user.merchant_id;
+    } else {
+      overrideMerchantId = bodyMerchantId ? parseInt(bodyMerchantId, 10) : null;
+    }
+
+    const product = await updateProductService({
       id,
       title,
       price,
       description,
       image_url,
       merchantId,
+      overrideMerchantId,
     });
+
     product.image_url = buildImageUrl(req, product.image_url);
     res.json(product);
   } catch (err) {
@@ -86,16 +105,28 @@ export async function updateProduct(req, res) {
   }
 }
 
+
+
 export async function deleteProduct(req, res) {
   try {
     const id = parseInt(req.params.id, 10);
-    const merchantId = req.user.merchant_id || null;
+    const { merchantId: bodyMerchantId } = req.body;
+
+    let merchantId;
+
+    if (req.user.merchant_id) {
+      merchantId = req.user.merchant_id;
+    } else {
+      merchantId = bodyMerchantId ? parseInt(bodyMerchantId, 10) : null;
+    }
+
     await deleteProductService({ id, merchantId });
-    res.json({ success: true, id });
+    res.json({ success: true, id, merchantId });
   } catch (err) {
     res.status(404).json({ error: err.message });
   }
 }
+
 
 export async function getProductById(req, res) {
   try {
